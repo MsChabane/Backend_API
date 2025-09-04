@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from .db import init_db
-from .dependencies import db_dependency
-from .models.heros import Hero
-from sqlmodel import select
+from .routes.User_router import user_router
 
 
 
@@ -20,18 +18,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
+app.include_router(user_router,prefix="/api/users",tags=['User'])
 
 @app.get("/")
 def check_helth():
     return {'status':'Running'}
-
-
-@app.get("/get")
-async def d(session:db_dependency) :  # type: ignore
-    result = await session.execute(select(Hero))
-    return result.scalars().all()
-
 
 
 
