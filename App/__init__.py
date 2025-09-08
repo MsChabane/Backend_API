@@ -15,10 +15,11 @@ async def lifespan(app:FastAPI):
 
 app = FastAPI(
     title='backend',
-    lifespan=lifespan
+    lifespan=lifespan,
+    version="0.0.1"
 )
 
-app.include_router(user_router,prefix="/api/users",tags=['User'])
+app.include_router(user_router,prefix="/api/v0/users",tags=['User'])
 
 @app.get("/")
 def check_helth():

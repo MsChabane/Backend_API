@@ -28,31 +28,21 @@ class UserServices:
 
 
     async def add( self,user_data:NewUserModel,session:AsyncSession):
-        is_exist = await self.check_user_exist(user_data.email,session)
-        if is_exist:
-            return None
         user_data.password=hash(user_data.password)
         user =User(**(user_data.model_dump()))
-        
         session.add(user)
         await session.commit()
         return user
 
 
-    async def update(self,user_id:str,user_data:UpdateUser,session:AsyncSession):
-        user =await self.get(user_id,session)
-        if user is None :
-            return 
+    async def update(self,user:User,user_data:UpdateUser,session:AsyncSession):
         for k,v in user_data.model_dump(exclude_unset=True).items():
             setattr(user, k, v)
         session.add(user)
         await session.commit()
         return user
         
-    async def delete(self,user_id,session:AsyncSession):
-        user= await self.get(user_id,session) 
-        if user is None:
-            return None
+    async def delete(self,user:User,session:AsyncSession):
         await session.delete(user)
         await session.commit()
         return user

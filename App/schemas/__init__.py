@@ -1,11 +1,10 @@
-from pydantic import BaseModel
-import uuid
-from typing  import Optional
-
+from pydantic import BaseModel,EmailStr
+from typing  import Optional,Literal
+from datetime import timedelta
 class NewUserModel(BaseModel):
     first_name: str
     last_name: str
-    email:str
+    email:EmailStr
     password: str
 
 
@@ -13,7 +12,7 @@ class UserModel(BaseModel):
     id:str
     first_name: str
     last_name: str
-    email:str
+    email:EmailStr
     is_verified: bool
 
 class UpdateUser(BaseModel):
@@ -22,3 +21,16 @@ class UpdateUser(BaseModel):
     is_verified: Optional[bool]=None
 
 
+class UserLogin(BaseModel):
+    email:EmailStr
+    password :str
+
+class Token(BaseModel):
+    access_token:str
+    refresh_token:str
+    token_type:Literal['Bearer']='Bearer'
+
+class Token_Data(BaseModel):
+    user_id:str
+    refresh:bool
+    exp:timedelta
