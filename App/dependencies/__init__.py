@@ -52,7 +52,7 @@ class AccessTokenChecker(TokenChecker):
 
 
 class RefreshTokenChecker(TokenChecker):
-    def validate_token_data(self, token_data: dict):
+    def check(self, token_data: dict):
         if not token_data.get("refresh", False):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

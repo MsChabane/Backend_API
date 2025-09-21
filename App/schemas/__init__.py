@@ -25,10 +25,13 @@ class UserLogin(BaseModel):
     email:EmailStr
     password :str
 
-class Token(BaseModel):
+class Refreched_Token(BaseModel):
     access_token:str
-    refresh_token:str
     token_type:Literal['Bearer']='Bearer'
+
+
+class Token(Refreched_Token):
+    refresh_token:str
 
 class Token_Data(BaseModel):
     user_id:str
