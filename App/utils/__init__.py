@@ -25,7 +25,6 @@ def decode_token(token:str):
         token_data= jwt.decode(token,config.JWT_SECRET,algorithms=[config.JWT_ALGORITHME])
         return token_data
     except JWTError as e:
-        print(e) 
         return None
 
 

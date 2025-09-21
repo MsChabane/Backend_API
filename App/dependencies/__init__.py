@@ -10,8 +10,8 @@ from ..schemas import Token_Data
 
 
 class TokenChecker(HTTPBearer):
-    def __init__(self, auto_error: bool = True):
-        super().__init__(auto_error=auto_error)
+    def __init__(self):
+         super().__init__(auto_error=False)
 
     async def __call__(self, request: Request) -> Token_Data:
         creds = await super().__call__(request)
