@@ -9,7 +9,7 @@ from ..models.User import User
 from ..schemas import Token_Data
 
 
-class Token_validator(HTTPBearer):
+class TokenChecker(HTTPBearer):
     def __init__(self, auto_error: bool = True):
         super().__init__(auto_error=auto_error)
 
@@ -29,16 +29,16 @@ class Token_validator(HTTPBearer):
                 detail="Invalid token."
             )
 
-        self.validate_token_data(token_data)
-        print()
+        self.check(token_data)
+        
         return Token_Data(**token_data)
 
-    def validate_token_data(self, token_data: dict):
+    def check(self, token_data: dict):
         raise NotImplementedError()
 
 
-class Access_Token_validator(Token_validator):
-    def validate_token_data(self, token_data: dict):
+class AccessTokenChecker(TokenChecker):
+    def check(self, token_data: dict):
         if token_data.get("refresh", False):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -51,7 +51,7 @@ class Access_Token_validator(Token_validator):
             )
 
 
-class Refresh_Token_validator(Token_validator):
+class RefreshTokenChecker(TokenChecker):
     def validate_token_data(self, token_data: dict):
         if not token_data.get("refresh", False):
             raise HTTPException(
@@ -66,15 +66,18 @@ class Refresh_Token_validator(Token_validator):
 
 
 db_dependency = Annotated[AsyncSession, Depends(get_session)]
-access_token_dependency = Annotated[Token_Data, Depends(Access_Token_validator())]
-refresh_token_dependency = Annotated[Token_Data, Depends(Refresh_Token_validator())]
+access_token_dependency = Annotated[Token_Data, Depends(AccessTokenChecker())]
+refresh_token_dependency = Annotated[Token_Data, Depends(RefreshTokenChecker())]
+
+
+
 
 
 async def get_current_user(
     token_data: access_token_dependency,
     session: db_dependency
 ) -> User:
-    print(token_data)
+
     user = await session.get(User, token_data.user_id)
     if not user:
         raise HTTPException(
@@ -84,4 +87,6 @@ async def get_current_user(
     return user
 
 
-current_user_dependency = Annotated[User, Depends(get_current_user)]
+
+
+

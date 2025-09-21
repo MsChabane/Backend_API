@@ -6,6 +6,9 @@ from ..utils import hash
 
 
 class UserServices:
+    
+
+
     async def get_all(self,session:AsyncSession,page:int=1,limit:int=100):
         statement = select(User).offset((page-1)*limit ).limit(limit)
         result = await session.exec(statement)
