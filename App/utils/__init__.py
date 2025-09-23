@@ -4,8 +4,21 @@ from datetime import timedelta,datetime,timezone
 from App.config import config
 from ..db import redis
 import uuid
+from itsdangerous import URLSafeTimedSerializer,BadSignature
 
 TOKEN_EXPIRY=300
+
+serilizer = URLSafeTimedSerializer(secret_key=config.SERILIZER_SECRET)
+
+def create_url_safe_token(data:dict)-> str:
+    token= serilizer.dumps(obj=data)
+    return token
+
+def decode_url_safe_token(token:str)->dict:
+    try:
+         return serilizer.loads(token)
+    except BadSignature as e :
+         return None 
 
 async def add_to_blocklist(token_id):
         await redis.set(name=token_id,value="",ex=TOKEN_EXPIRY)

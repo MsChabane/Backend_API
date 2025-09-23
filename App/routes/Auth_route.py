@@ -1,24 +1,68 @@
-from fastapi import APIRouter ,status,HTTPException,Depends
-from ..schemas import UserModel,NewUserModel,UserLogin,Token,Refreched_Token
+from fastapi import APIRouter ,status,HTTPException,Depends,BackgroundTasks,Request
+from ..schemas import UserModel,NewUserModel,UserLogin,Token,Refreched_Token,UpdateUser,Verfication
 from ..dependencies import db_dependency,get_current_user,refresh_token_dependency,access_token_dependency
 from ..services.user_services import UserServices
-from ..utils import checkpwd,create_token
-
+from ..utils import checkpwd,create_token,create_url_safe_token,decode_url_safe_token
+from ..mail import send_verifcation_mail
+from pydantic import EmailStr
 
 
 auth_router = APIRouter()
 user_services = UserServices()
 
+@auth_router.post('send-verifcation-token',response_model=Verfication)
+async def send_mail(email:EmailStr,session:db_dependency):
+    user =await user_services.get_by_email(email=email,session=session)
+    if user is None :
+        raise  HTTPException(
+            detail="User is not found",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    if user.is_verified :
+        raise  HTTPException(
+            detail="User is verified",
+            status_code=status.HTTP_403_FORBIDDEN
+        )
+    await send_verifcation_mail(email=email)
+    
+    return Verfication( message='verification token is send successfelly')
+
+
 @auth_router.post("/sign-up",response_model=UserModel, status_code=status.HTTP_200_OK)
-async def sign_up(user_data:NewUserModel,session:db_dependency):
+async def sign_up(user_data:NewUserModel,session:db_dependency,task:BackgroundTasks, request: Request ):
     if await user_services.check_user_exist(user_data.email,session):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="user is already exist.")
     
     user = await user_services.add(session=session,user_data=user_data)
+    
+    token = create_url_safe_token({"email":user.email})
+    link=f"{str(request.base_url).rstrip("/") }/api/v0/auth/verify/{token}"
+    task.add_task(send_verifcation_mail,email=user.email,link=link)
     return user
 
-
-
+@auth_router.post("verify/{token}",response_model=Verfication)
+async def verify(token:str,session:db_dependency):
+    data = decode_url_safe_token(token)
+    
+    if data is None or data.get("email",None):
+        raise HTTPException(
+            detail="Invalid token .",
+            status_code=status.HTTP_403_FORBIDDEN
+        )
+    email = data.get("email",None)
+    user = await user_services.get_by_email(email,session)
+    if user is None :
+        raise  HTTPException(
+            detail="User is not found ",
+            status_code=status.HTTP_404_NOT_FOUND
+        )
+    user=await user_services.update(user=user,user_data=UpdateUser(is_verified=True),session=session)
+    if user is None:
+        raise HTTPException(
+            detail="Can't verify the user",
+            status_code=status.HTTP_403_FORBIDDEN
+        )
+    return Verfication( message='verification is done successefelly')
 
 
 @auth_router.post("/login",response_model=Token,status_code=status.HTTP_200_OK)

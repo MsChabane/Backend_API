@@ -9,3 +9,4 @@ python-jose==3.5.0
 email-validator==2.3.0
 itsdangerous==2.2.0
 redis==6.4.0
+fastapi-mail==1.5.0

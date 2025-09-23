@@ -38,3 +38,7 @@ class Token_Data(BaseModel):
     refresh:bool
     exp:timedelta
     jti:str
+
+class Verfication(BaseModel):
+    message:str
+
