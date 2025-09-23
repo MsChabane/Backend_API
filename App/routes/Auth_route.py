@@ -1,8 +1,9 @@
 from fastapi import APIRouter ,status,HTTPException,Depends
 from ..schemas import UserModel,NewUserModel,UserLogin,Token,Refreched_Token
-from ..dependencies import db_dependency,get_current_user,refresh_token_dependency
+from ..dependencies import db_dependency,get_current_user,refresh_token_dependency,access_token_dependency
 from ..services.user_services import UserServices
 from ..utils import checkpwd,create_token
+
 
 
 auth_router = APIRouter()
@@ -46,3 +47,9 @@ async def create_new_access_token(token_data:refresh_token_dependency ) :
     data = {"user_id":token_data.user_id}
     access_token= create_token(data,acces_token=True)
     return Refreched_Token(access_token=access_token)
+
+@auth_router.post('logout')
+def logout(token_data:access_token_dependency):
+    jti = token_data.jti
+
+    

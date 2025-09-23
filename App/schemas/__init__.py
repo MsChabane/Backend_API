@@ -37,3 +37,4 @@ class Token_Data(BaseModel):
     user_id:str
     refresh:bool
     exp:timedelta
+    jti:str

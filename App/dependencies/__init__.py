@@ -3,65 +3,68 @@ from fastapi import Depends, HTTPException, status, Request
 from typing import Annotated
 from App.db import get_session
 from fastapi.security import HTTPBearer
-from ..utils import decode_token
-from datetime import datetime
+from ..utils import decode_token,isblocked
 from ..models.User import User
 from ..schemas import Token_Data
 
 
 class TokenChecker(HTTPBearer):
     def __init__(self):
-         super().__init__(auto_error=False)
+         super().__init__(auto_error=True)
 
     async def __call__(self, request: Request) -> Token_Data:
         creds = await super().__call__(request)
-        if creds is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid token."
-            )
-
         token = creds.credentials
-        token_data = decode_token(token)
-        if token_data is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid token."
-            )
+        token_data,token_status = decode_token(token)
 
-        self.check(token_data)
+        await self.check(token_data,token_status)
         
         return Token_Data(**token_data)
 
-    def check(self, token_data: dict):
+    async def check(self, token_data: dict,token_status:int):
         raise NotImplementedError()
 
 
 class AccessTokenChecker(TokenChecker):
-    def check(self, token_data: dict):
+    async def check(self, token_data: dict,token_status:int):
+        if token_status == 1:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access token expired."
+            )
+        if token_status == 2:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid access token."
+            )
         if token_data.get("refresh", False):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Provide an access token."
             )
-        if datetime.now().timestamp() > token_data["exp"]:
+        if await isblocked(token_id=token_data.get("jti")):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access token expired."
+                detail="Token has been revoked."
             )
-
+        
 
 class RefreshTokenChecker(TokenChecker):
-    def check(self, token_data: dict):
+    async def check(self, token_data: dict,token_status):
+        if token_status == 1:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Refresh token expired."
+            )
+        if token_status == 2:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid refresh token."
+            )
         if not token_data.get("refresh", False):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Provide a refresh token."
-            )
-        if datetime.now().timestamp() > token_data["exp"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Refresh token expired."
             )
 
 

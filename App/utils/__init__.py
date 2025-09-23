@@ -1,12 +1,24 @@
 import bcrypt
-from jose import jwt,JWTError
-from datetime import timedelta,datetime
+from jose import jwt,JWTError,ExpiredSignatureError
+from datetime import timedelta,datetime,timezone
 from App.config import config
+from ..db import redis
+import uuid
+
+TOKEN_EXPIRY=300
+
+async def add_to_blocklist(token_id):
+        await redis.set(name=token_id,value="",ex=TOKEN_EXPIRY)
+
+async def isblocked(token_id)->bool:
+     return (await redis.get(token_id) ) is not  None 
 
 def hash(password:str)-> str:
     salt = bcrypt.gensalt()
     hashed=bcrypt.hashpw(password=password.encode(),salt=salt)
     return hashed.decode()
+
+
 
 
 def checkpwd(password:str,hashed:str)-> bool:
@@ -15,16 +27,19 @@ def checkpwd(password:str,hashed:str)-> bool:
 
 def create_token(data:dict,acces_token:bool=True):
     expiry = timedelta(minutes=2) if acces_token else timedelta(days=7)
-    data["exp"]=datetime.now()+expiry
+    data["exp"]=int((datetime.now(timezone.utc)+expiry).timestamp())
+    data["jti"]=str(uuid.uuid4())
     data['refresh']= not acces_token
     token = jwt.encode(data,config.JWT_SECRET)
     return token
 
-def decode_token(token:str):
+def decode_token(token:str)->dict:
     try:
         token_data= jwt.decode(token,config.JWT_SECRET,algorithms=[config.JWT_ALGORITHME])
-        return token_data
+        return token_data,0
+    except ExpiredSignatureError as e:
+         return None,1
     except JWTError as e:
-        return None
+        return None,2
 
 
