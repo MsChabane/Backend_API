@@ -12,6 +12,7 @@ Supports full CRUD operations, password hashing with **bcrypt**, and authenticat
 - Pagination support for listing users
 - Email uniqueness validation
 - Clean architecture with `services`, `schemas`, and `routes`
+- Verification user via sending token to email
 
 ---
 
