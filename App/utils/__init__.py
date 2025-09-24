@@ -4,7 +4,7 @@ from datetime import timedelta,datetime,timezone
 from App.config import config
 from ..db import redis
 import uuid
-from itsdangerous import URLSafeTimedSerializer,BadSignature
+from itsdangerous import URLSafeTimedSerializer,BadSignature,SignatureExpired
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -18,11 +18,14 @@ def create_url_safe_token(data:dict)-> str:
     token= serilizer.dumps(obj=data)
     return token
 
-def decode_url_safe_token(token:str)->dict:
+def decode_url_safe_token(token:str,max_age:int=None)->dict:
     try:
-         return serilizer.loads(token)
+         return serilizer.loads(token,max_age=max_age),0
+
     except BadSignature as e :
-         return None 
+         return None ,1
+    except SignatureExpired as e:
+         return None,2
 
 async def add_to_blocklist(token_id):
         await redis.set(name=token_id,value="",ex=TOKEN_EXPIRY)

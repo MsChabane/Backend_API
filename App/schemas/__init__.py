@@ -1,10 +1,10 @@
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel,EmailStr,Field
 from typing  import Optional,Literal
 from datetime import timedelta
 class NewUserModel(BaseModel):
     first_name: str
     last_name: str
-    email:EmailStr
+    email:EmailStr=Field(max_length=40)
     password: str
 
 
@@ -12,7 +12,7 @@ class UserModel(BaseModel):
     id:str
     first_name: str
     last_name: str
-    email:EmailStr
+    email:EmailStr=Field(max_length=40)
     is_verified: bool
 
 class UpdateUser(BaseModel):
@@ -22,7 +22,7 @@ class UpdateUser(BaseModel):
 
 
 class UserLogin(BaseModel):
-    email:EmailStr
+    email:EmailStr=Field(max_length=40)
     password :str
 
 class Refreched_Token(BaseModel):
@@ -39,6 +39,9 @@ class Token_Data(BaseModel):
     exp:timedelta
     jti:str
 
-class Verfication(BaseModel):
+class Message(BaseModel):
     message:str
 
+class Reset_password(BaseModel):
+    email:EmailStr=Field(max_length=40)
+    new_password:str

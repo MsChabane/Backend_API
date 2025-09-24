@@ -49,6 +49,12 @@ class UserServices:
         session.add(user)
         await session.commit()
         return user
+    
+    async def change_password(self,user:User,new_password:str,session:AsyncSession):
+        user.password=hash(new_password)
+        session.add(user)
+        await session.commit()
+        return user
         
     async def delete(self,user:User,session:AsyncSession):
         await session.delete(user)
