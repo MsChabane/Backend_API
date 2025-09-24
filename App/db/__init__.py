@@ -8,10 +8,7 @@ from redis.asyncio import Redis
 engine = create_async_engine(config.DATABASE_URL)
 async_session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
-redis = Redis(
-    host='localhost',
-    db=0
-)
+redis = Redis.from_url(config.REDIS_URL,single_connection_client=True)
 
 
 async def init_db():

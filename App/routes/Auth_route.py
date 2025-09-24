@@ -2,10 +2,11 @@ from fastapi import APIRouter ,status,HTTPException,Depends,BackgroundTasks,Requ
 from ..schemas import UserModel,NewUserModel,UserLogin,Token,Refreched_Token,UpdateUser,Verfication
 from ..dependencies import db_dependency,get_current_user,refresh_token_dependency,access_token_dependency
 from ..services.user_services import UserServices
-from ..utils import checkpwd,create_token,create_url_safe_token,decode_url_safe_token
+from ..utils import checkpwd,create_token,create_url_safe_token,decode_url_safe_token,add_to_blocklist
 from ..mail import send_verifcation_mail
 from pydantic import EmailStr
 from ..utils import limiter
+
 
 auth_router = APIRouter()
 user_services = UserServices()
@@ -99,6 +100,13 @@ async def create_new_access_token(token_data:refresh_token_dependency ,request:R
     access_token= create_token(data,acces_token=True)
     return Refreched_Token(access_token=access_token)
 
-
+@auth_router.post("/logout")
+async def logout(token_data:access_token_dependency):
+    jti= token_data.jti
+    await add_to_blocklist(jti)
+    return {
+        'message':'logout successfelly'
+    }
+    
 
     

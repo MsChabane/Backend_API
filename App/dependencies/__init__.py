@@ -42,11 +42,11 @@ class AccessTokenChecker(TokenChecker):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Provide an access token."
             )
-       # if await isblocked(token_id=token_data.get("jti")):
-        #    raise HTTPException(
-         #       status_code=status.HTTP_403_FORBIDDEN,
-          #      detail="Token has been revoked."
-           # )
+        if await isblocked(token_id=token_data.get("jti")):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Token has been revoked."
+            )
         
 
 class RefreshTokenChecker(TokenChecker):
