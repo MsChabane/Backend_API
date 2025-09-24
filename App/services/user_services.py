@@ -44,6 +44,11 @@ class UserServices:
         session.add(user)
         await session.commit()
         return user
+    async def activate(self,user:User,session:AsyncSession):
+        user.is_verified=True
+        session.add(user)
+        await session.commit()
+        return user
         
     async def delete(self,user:User,session:AsyncSession):
         await session.delete(user)

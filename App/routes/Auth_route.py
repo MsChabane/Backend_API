@@ -66,7 +66,7 @@ async def login(login_data:UserLogin,session: db_dependency,request:Request):
 
 @auth_router.get("/me",response_model=UserModel)
 @limiter.limit("5/minute")
-def me(request:Request,user= Depends(get_current_user),):
+def me(request:Request,user= Depends(get_current_user)):
     return user
 
 @auth_router.post("verify/{token}",response_model=Verfication)
@@ -85,7 +85,7 @@ async def verify(token:str,session:db_dependency):
             detail="User is not found ",
             status_code=status.HTTP_404_NOT_FOUND
         )
-    user=await user_services.update(user=user,user_data=UpdateUser(is_verified=True),session=session)
+    user=await user_services.activate(user=user,session=session)
     if user is None:
         raise HTTPException(
             detail="Can't verify the user",

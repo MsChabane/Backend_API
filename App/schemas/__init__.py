@@ -18,7 +18,7 @@ class UserModel(BaseModel):
 class UpdateUser(BaseModel):
     first_name: Optional[str]=None
     last_name: Optional[str]=None
-    is_verified: Optional[bool]=None
+    
 
 
 class UserLogin(BaseModel):

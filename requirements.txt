@@ -11,3 +11,4 @@ itsdangerous==2.2.0
 redis==6.4.0
 fastapi-mail==1.5.0
 slowapi==0.1.9
+asyncpg==0.30.0
