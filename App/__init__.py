@@ -3,11 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import config
 from .routes.User_router import user_router
 from .routes.Auth_route import auth_router
-from .utils import limiter,get_logger
-from .errors import register_exceptions_handler,custom_openapi
+from .utils import limiter,get_logger,override_openapi
+from .errors import register_exceptions_handler
 import logging
 import time
-from .errors import get_openapi
+
 
 logging.getLogger("uvicorn.access").disabled = True
 logging.getLogger("uvicorn.error").disabled = True
@@ -20,7 +20,6 @@ logger =get_logger("logger")
 
 app = FastAPI(
     title='backend',
-   
     version="0.0.1"
 )
 
@@ -52,15 +51,15 @@ app.state.limiter = limiter
 
 register_exceptions_handler(app=app)
 
-app.include_router(auth_router,prefix="/api/v0/auth",tags=['Auth'])
-app.include_router(user_router,prefix="/api/v0/users",tags=['User'])
+app.include_router(auth_router,prefix="/api/v1/auth",tags=['Auth'])
+app.include_router(user_router,prefix="/api/v1/users",tags=['User'])
 
 @app.get("/")
 def check_helth(request: Request):
     
     return {'status':'Running'}
 
-app.openapi = lambda: custom_openapi(app)
+app.openapi = lambda: override_openapi(app)
 
 
 

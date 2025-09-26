@@ -1,8 +1,11 @@
+from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 import bcrypt
 from jose import jwt,JWTError,ExpiredSignatureError
 from datetime import timedelta,datetime,timezone
 from App.config import config
 from ..db import redis
+from ..schemas import Error
 import uuid
 from itsdangerous import URLSafeTimedSerializer,BadSignature,SignatureExpired
 import logging
@@ -92,3 +95,32 @@ def get_logger(name:str)->logging.Logger:
     logger.addHandler(stream_handler)
     return logger
 
+def override_openapi(app:FastAPI):
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    # ensure components.schemas exists
+    openapi_schema.setdefault("components", {}).setdefault("schemas", {})
+    openapi_schema["components"]["schemas"]["Error"] = Error.model_json_schema()
+
+    # loop through all paths
+    for path, methods in openapi_schema.get("paths", {}).items():
+        for method, details in methods.items():
+            responses = details.get("responses", {})
+            for status_code, response in responses.items():
+                if status_code != "200":
+                    content = response.get("content", {})
+                    if "application/json" in content:
+                        content["application/json"]["schema"] = {
+                            "$ref": "#/components/schemas/Error"
+                        }
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema

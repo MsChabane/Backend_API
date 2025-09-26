@@ -205,35 +205,6 @@ def register_exceptions_handler(app:FastAPI):
     
 
 
-from fastapi.openapi.utils import get_openapi
 
 
-def custom_openapi(app):
-    if app.openapi_schema:
-        return app.openapi_schema
 
-    openapi_schema = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-    )
-
-    # ensure components.schemas exists
-    openapi_schema.setdefault("components", {}).setdefault("schemas", {})
-    openapi_schema["components"]["schemas"]["Error"] = Error.model_json_schema()
-
-    # loop through all paths
-    for path, methods in openapi_schema.get("paths", {}).items():
-        for method, details in methods.items():
-            responses = details.get("responses", {})
-            for status_code, response in responses.items():
-                if status_code != "200":
-                    content = response.get("content", {})
-                    if "application/json" in content:
-                        content["application/json"]["schema"] = {
-                            "$ref": "#/components/schemas/Error"
-                        }
-
-    app.openapi_schema = openapi_schema
-    return app.openapi_schema
