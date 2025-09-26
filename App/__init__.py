@@ -1,45 +1,66 @@
 from fastapi import FastAPI,Request
-from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
-
-
-from .db import init_db
+from fastapi.middleware.cors import CORSMiddleware
+from .config import config
 from .routes.User_router import user_router
 from .routes.Auth_route import auth_router
-from .utils import limiter,RateLimitExceeded
+from .utils import limiter,get_logger
+from .errors import register_exceptions_handler,custom_openapi
+import logging
+import time
+from .errors import get_openapi
+
+logging.getLogger("uvicorn.access").disabled = True
+logging.getLogger("uvicorn.error").disabled = True
+
+logger =get_logger("logger")
 
 
-@asynccontextmanager
-async def lifespan(app:FastAPI):
-    print("starting")
-    await init_db()
-    yield
-    print("stopping")
+
 
 
 app = FastAPI(
     title='backend',
-    lifespan=lifespan,
+   
     version="0.0.1"
 )
-async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
-    return JSONResponse(
-        status_code=429,
-        content={
-            'message':"Too many requests"
-        }
-    )
+
+
+app.add_middleware(CORSMiddleware,
+        allow_origins=config.ALLOWED_ORIGINS,
+        allow_methods=['*'],
+        allow_headers=['*'],
+        allow_credentials=False
+            )
+
+
+@app.middleware("http")
+async def middleware(request:Request,call_next):
+    start = time.time()
+    responce = await call_next(request)
+    proccessed_time=(time.time()-start)*1000
+    message=f" {request.method} - {request.base_url } -> {responce.status_code} | {proccessed_time:.2f}s"
+    if responce.status_code!=200:
+        logger.error(message)
+    else:
+        logger.info(message)
+    return responce
+    
+
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded,rate_limit_exceeded_handler)
+
+
+register_exceptions_handler(app=app)
 
 app.include_router(auth_router,prefix="/api/v0/auth",tags=['Auth'])
 app.include_router(user_router,prefix="/api/v0/users",tags=['User'])
 
 @app.get("/")
 def check_helth(request: Request):
+    
     return {'status':'Running'}
 
+app.openapi = lambda: custom_openapi(app)
 
 
 

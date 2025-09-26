@@ -43,18 +43,21 @@
       line-height: 1.5;
       margin-bottom: 24px;
     }
-    .button {
+    .token-box {
       display: inline-block;
       padding: 12px 24px;
-      font-size: 16px;
-      color: #ffffff;
-      background-color: #4a90e2;
+      font-size: 18px;
+      font-weight: bold;
+      color: #4a90e2;
+      background-color: #f0f4ff;
+      border: 1px dashed #4a90e2;
       border-radius: 5px;
-      text-decoration: none;
-      transition: background 0.3s;
+      margin: 10px 0;
     }
-    .button:hover {
-      background-color: #357ABD;
+    .expiry-note {
+      font-size: 14px;
+      color: #cc0000;
+      margin-top: 10px;
     }
     .footer {
       background: #f4f7fa;
@@ -75,8 +78,9 @@
     <!-- Content -->
     <div class="content">
       <h2>Hello {{ email }}</h2>
-      <p>Thanks for signing up! Please confirm your email address by clicking the button below:</p>
-      <a href="{{ verification }}" class="button" >Verify Email</a>
+      <p>Thanks for signing up! Please use the verification token below to confirm your email address:</p>
+      <div class="token-box">{{ token }}</div>
+      <p class="expiry-note">⚠️ This token will expire in 1800 seconds (30 minutes).</p>
       <p>If you did not create this account, you can safely ignore this email.</p>
     </div>
 

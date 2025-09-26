@@ -8,8 +8,11 @@ class Settings(BaseSettings):
     MAIL_USERNAME : str  
     MAIL_PASSWORD: str 
     MAIL_FROM : str
+    MAIL_SERVER:str
+    MAIL_PORT:int
     SERILIZER_SECRET:str
     REDIS_URL:str
+    ALLOWED_ORIGINS:list
     model_config = SettingsConfigDict(
         env_file='.env',
         extra='ignore'

@@ -6,14 +6,20 @@ from fastapi.security import HTTPBearer
 from ..utils import decode_token,isblocked
 from ..models.User import User
 from ..schemas import Token_Data
-
+from ..errors import (AccessTokenRequired,AccessTokenExpired,
+                      AccessTokenInvalid,AccessTokenRevoked,TokenRequired,
+                      RefreshTokenExpired,RefreshTokenInvalid,RefreshTokenRequired,
+                      UserNotFound
+)
 
 class TokenChecker(HTTPBearer):
     def __init__(self):
-         super().__init__(auto_error=True)
+         super().__init__(auto_error=False)
 
     async def __call__(self, request: Request) -> Token_Data:
         creds = await super().__call__(request)
+        if creds is None:
+            raise TokenRequired()
         token = creds.credentials
         token_data,token_status = decode_token(token)
 
@@ -28,44 +34,24 @@ class TokenChecker(HTTPBearer):
 class AccessTokenChecker(TokenChecker):
     async def check(self, token_data: dict,token_status:int):
         if token_status == 1:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access token expired."
-            )
+            raise AccessTokenExpired()
+        
         if token_status == 2:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid access token."
-            )
+            raise AccessTokenInvalid()
         if token_data.get("refresh", False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Provide an access token."
-            )
+            raise AccessTokenRequired()
         if await isblocked(token_id=token_data.get("jti")):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Token has been revoked."
-            )
+            raise AccessTokenRevoked()
         
 
 class RefreshTokenChecker(TokenChecker):
     async def check(self, token_data: dict,token_status):
         if token_status == 1:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Refresh token expired."
-            )
+            raise RefreshTokenExpired()
         if token_status == 2:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid refresh token."
-            )
+            raise RefreshTokenInvalid()
         if not token_data.get("refresh", False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Provide a refresh token."
-            )
+            raise RefreshTokenRequired()
 
 
 db_dependency = Annotated[AsyncSession, Depends(get_session)]
@@ -83,10 +69,7 @@ async def get_current_user(
 
     user = await session.get(User, token_data.user_id)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found."
-        )
+        raise UserNotFound()
     return user
 
 

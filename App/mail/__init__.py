@@ -10,8 +10,8 @@ mail_config=ConnectionConfig(
     MAIL_USERNAME=config.MAIL_USERNAME,   
     MAIL_PASSWORD=config.MAIL_PASSWORD,  
     MAIL_FROM=config.MAIL_FROM,
-    MAIL_PORT=465,               
-    MAIL_SERVER="smtp.gmail.com",
+    MAIL_PORT=config.MAIL_PORT,               
+    MAIL_SERVER=config.MAIL_SERVER,
     MAIL_STARTTLS=False,        
     MAIL_SSL_TLS=True,           
     USE_CREDENTIALS=True,
@@ -21,13 +21,13 @@ mail_config=ConnectionConfig(
 
 mail = FastMail(config=mail_config)
 
-async def send_verifcation_mail(email:str,link:str):
+async def send_verifcation_mail(email:str,token:str):
     message = MessageSchema(
         subject="Verification email",
         recipients=[email],
         template_body={
             'email':email,
-            "verification":link,
+            "token":token,
             "year":date.today().year
         },
         subtype=MessageType.html
@@ -39,7 +39,9 @@ async def send_reset_password(email:str,token:str):
         subject="Reset Password",
         recipients=[email],
         template_body={
-            'token':token
+            'email':email,
+            "token":token,
+            "year":date.today().year
         },
         subtype=MessageType.html
     )

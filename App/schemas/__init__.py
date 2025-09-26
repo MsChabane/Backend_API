@@ -43,5 +43,10 @@ class Message(BaseModel):
     message:str
 
 class Reset_password(BaseModel):
-    email:EmailStr=Field(max_length=40)
     new_password:str
+
+
+class Error(BaseModel):
+    error:str
+    code:str
+    details:Optional[dict]=None

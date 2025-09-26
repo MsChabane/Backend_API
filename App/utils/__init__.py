@@ -5,9 +5,11 @@ from App.config import config
 from ..db import redis
 import uuid
 from itsdangerous import URLSafeTimedSerializer,BadSignature,SignatureExpired
+import logging
+import colorlog
+
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 limiter = Limiter(key_func=get_remote_address)
 
 TOKEN_EXPIRY=300
@@ -46,7 +48,7 @@ def checkpwd(password:str,hashed:str)-> bool:
 
 
 def create_token(data:dict,acces_token:bool=True):
-    expiry = timedelta(minutes=2) if acces_token else timedelta(days=7)
+    expiry = timedelta(minutes=2) if acces_token else timedelta(days=1)
     data["exp"]=int((datetime.now(timezone.utc)+expiry).timestamp())
     data["jti"]=str(uuid.uuid4())
     data['refresh']= not acces_token
@@ -62,4 +64,31 @@ def decode_token(token:str)->dict:
     except JWTError as e:
         return None,2
 
+
+def get_logger(name:str)->logging.Logger:
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)  
+
+    
+    stream_handler = logging.StreamHandler()
+    formatter = colorlog.ColoredFormatter(
+        fmt="%(log_color)s%(levelname)-s:%(asctime)8s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        log_colors={
+        "DEBUG": "cyan",
+        "INFO": "green",
+        "WARNING": "yellow",
+        "ERROR": "red",
+        "CRITICAL": "bold_red",
+        }
+    )
+    stream_handler.setFormatter(formatter)
+
+    
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    
+    logger.addHandler(stream_handler)
+    return logger
 
