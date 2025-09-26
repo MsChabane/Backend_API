@@ -65,10 +65,13 @@ docker pull mschabane/user_management_fastapi:v1.0.0
 docker run -d -p 8000:8000 --name user_management_api \
   --env DATABASE_URL=your_database_url \
   --env JWT_SECRET=your_jwt_secret \
-  --env JWT_ALGORITHME=HS256 \
+  --env JWT_ALGORITHME=algorithme \
   --env MAIL_USERNAME=your_email_username \
   --env MAIL_PASSWORD=your_email_password \
   --env MAIL_FROM=your_email_address \
+  --env MAIL_PORT=your_email_port \
+  --env MAIL_SERVER=your_email_server \
+  --env ALLOWED_ORIGINS=list_of_origins \
   --env SERILIZER_SECRET=your_serializer_secret \
   --env REDIS_URL=your_redis_url \
   mschabane/user_management_fastapi:v1.0.0
