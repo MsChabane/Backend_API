@@ -21,8 +21,8 @@ async def sign_up(user_data:NewUserModel,session:db_dependency,task:BackgroundTa
     user = await user_services.add(session=session,user_data=user_data)
     
     token = create_url_safe_token({"email":user.email})
-    link=f"{str(request.base_url).rstrip("/") }/api/v0/auth/verify/{token}"
-    task.add_task(send_verifcation_mail,email=user.email,link=link)
+    
+    task.add_task(send_verifcation_mail,email=user.email,token=token)
     return user
 
 
