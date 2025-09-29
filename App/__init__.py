@@ -36,8 +36,8 @@ app.add_middleware(CORSMiddleware,
 async def middleware(request:Request,call_next):
     start = time.time()
     responce = await call_next(request)
-    proccessed_time=(time.time()-start)*1000
-    message=f" {request.method} - {request.base_url } -> {responce.status_code} | {proccessed_time:.2f}s"
+    process_time=time.time()-start
+    message=f" {request.method} - {request.url.path } -> {responce.status_code} | {process_time:.2f}s"
     if responce.status_code!=200:
         logger.error(message)
     else:

@@ -58,9 +58,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
     return JSONResponse(
         status_code=429,
-        content={
-            'message':"Too many requests"
-        }
+        content=Error(
+            error="Too many requests",
+            code="too_many_request",
+            details=None  
+        ).model_dump()
     )
 
 def create_exception_handler(status_code:int,detail:Error)->Callable[[Request,AppException],JSONResponse]:
